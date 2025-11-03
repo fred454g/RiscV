@@ -1,0 +1,95 @@
+# #################### #
+# OS-specifikke filer
+# #################### #
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+__MACOSX
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# #################### #
+# C / C++ Kompilering
+# #################### #
+
+# Kompilerede filer
+*.o
+*.obj
+*.o.d
+
+# Biblioteker
+*.a
+*.lib
+*.so
+*.dylib
+
+# DLL'er
+*.dll
+
+# Eksekverbare filer
+*.exe
+*.out
+a.out
+*.app
+
+# Debugging
+*.stackdump
+*.core
+.gdb_history
+
+# Precompiled headers
+*.pch
+
+# #################### #
+# Build-systemer & IDE'er
+# #################### #
+
+# Build-mapper 
+build/
+bin/
+*.VC.db
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+Makefile
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.suo
+*.user
+*.vcxproj.user
+*.sln.docstates
+Debug/
+Release/
+x64/
+Win32/
+ARM64/
+ipch/
+
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+Build/
+
+# CLion / JetBrains
+.idea/
+cmake-build-debug/
+cmake-build-release/
+
+#AI 
+.claude
