@@ -9,9 +9,7 @@ Branch instructions are added and with them the PC
 
 ## Task 3
 The following is added:
-\begin{tabular}
-    \item 1 MB memory
-    \item Stack pointer
-    \item Load/store instructions
-    \item Function calls
-\end{tabular}
+- 1 MB memory
+- Stack pointer
+- Load/store instructions
+- Function calls
