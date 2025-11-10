@@ -11,10 +11,12 @@ public class main {
             0x00200093, // addi x1 x0 2
             0x00300113, // addi x2 x0 3
             0x002081b3, // add x3 x1 x2
+            0x00A00893, // addi a7, x0, 10 (load service 10 'exit' into a7)
+            0x00000073  // ecall
     };
     public static void main(String[] args) {
         
-        System.out.println("Hello RISC-V World!");
+        System.out.println("Starting simulation!");
 
         pc = 0;
         Arrays.fill(reg, 0); // Initiate all registers to 0
@@ -186,11 +188,13 @@ public class main {
                                 case 10: // Service 10: Exit
                                     System.out.println("\n--- ECALL: Exit ---");
                                     simulation_running = false; // Set flag to terminate the loop
+                                    pc_changed = true;
                                     break;
                                 
                                 case 93: // Service 93: Exit with code (alternative standard)
                                     System.out.println("\n--- ECALL: Exit with code " + reg[10] + " ---");
                                     simulation_running = false;
+                                    pc_changed = true;
                                     break;
 
                                 default:
