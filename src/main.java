@@ -18,6 +18,7 @@ public class main {
 
         pc = 0;
         Arrays.fill(reg, 0); // Initiate all registers to 0
+        reg[2] = memory.length; // Initialize Stack Pointer (x2) to the end of memory
         
         // --- SIMULATION LOOP ---
         boolean simulation_running = true; // ECALL can stop the simulation
@@ -97,6 +98,10 @@ public class main {
                                 case 0x0: // ADDI
                                     reg[decoded.i.rd()] = reg[decoded.i.rs1()] + decoded.i.immediate();
                                     break;
+                                case 0x1: // SLLI (Shift Left Logical Immediate)
+                                    int shamt_slli = (decoded.instruction >> 20) & 0x1F;
+                                    reg[decoded.i.rd()] = reg[decoded.i.rs1()] << shamt_slli;
+                                    break;
                                 case 0x2: // SLTI
                                     reg[decoded.i.rd()] = (reg[decoded.i.rs1()] < decoded.i.immediate()) ? 1 : 0;
                                     break;
@@ -105,6 +110,17 @@ public class main {
                                     break;
                                 case 0x4: // XORI
                                     reg[decoded.i.rd()] = reg[decoded.i.rs1()] ^ decoded.i.immediate();
+                                    break;
+                                case 0x5: // SRLI or SRAI
+                                    int shamt_sr = (decoded.instruction >> 20) & 0x1F;
+                                    int funct7_sr = (decoded.instruction >> 25) & 0x7F;
+                                    if (funct7_sr == 0x00) { // SRLI (Shift Right Logical Immediate)
+                                        reg[decoded.i.rd()] = reg[decoded.i.rs1()] >>> shamt_sr;
+                                    } else if (funct7_sr == 0x20) { // SRAI (Shift Right Arithmetic Immediate)
+                                        reg[decoded.i.rd()] = reg[decoded.i.rs1()] >> shamt_sr;
+                                    } else {
+                                        System.out.println("Unknown I-type shift with funct7=" + funct7_sr);
+                                    }
                                     break;
                                 case 0x6: // ORI
                                     reg[decoded.i.rd()] = reg[decoded.i.rs1()] | decoded.i.immediate();
