@@ -30,7 +30,7 @@ public class ProgramLoader {
                 address++;
             }
 
-            return address // Return the program's size in bytes
+            return address; // Return the program's size in bytes
         }
         // 'fis' is automatically closed here
     }
