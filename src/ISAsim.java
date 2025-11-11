@@ -1,4 +1,6 @@
 import java.util.*;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class ISAsim {
     
@@ -6,34 +8,55 @@ public class ISAsim {
     static int reg[] = new int[32];
     static byte[] memory = new byte[1024 * 1024]; // 1 MB of simulated RAM
 
-    static int progr[] = {
-            // As minimal RISC-V assembler example
-            0x00200093, // addi x1 x0 2
-            0x00300113, // addi x2 x0 3
-            0x002081b3, // add x3 x1 x2
-            0x00A00893, // addi a7, x0, 10 (load service 10 'exit' into a7)
-            0x00000073  // ecall
-    };
+    // --- Program State ---
+    static int programSizeInBytes = 0; // The total size of the loaded program in bytes. Used for bounds checking.
+
+    /**
+     * Main entry point for the simulator.
+     * Loads a binary program into memory and starts the simulation loop.
+     * @param args Command line arguments, expects the path to the .bin file at index 0.
+     */
     public static void main(String[] args) {
         
+        // --- PROGRAM LOADING ---
+        Scanner scanner = new Scanner(System.in); // Create a new scanner to read from the console
+        System.out.println("Enter the path to the .bin file (e.g., tests/task1/addi.bin):");
+        String binFile = scanner.nextLine(); // Read the file path from the user
+
+        try {
+            // Attempt to load the program from the .bin file using the ProgramLoader helper
+            programSizeInBytes = ProgramLoader.loadProgram(memory, binFile);
+            System.out.println("Loaded " + programSizeInBytes + " bytes from " + binFile);
+
+        } catch (IOException e) {
+            // Handle errors (e.g., file not found, program too large)
+            System.out.println("Error loading file: " + e.getMessage());
+            scanner.close(); // Close the scanner on error
+            return;
+        }
+
+        scanner.close(); // Close the scanner after we're done with it
+
+        // --- SIMULATION START ---
         System.out.println("Starting simulation!");
 
-        pc = 0;
+        pc = 0;                    // Set program Counter to the start of the program
         Arrays.fill(reg, 0); // Initiate all registers to 0
         reg[2] = memory.length; // Initialize Stack Pointer (x2) to the end of memory
         
         // --- SIMULATION LOOP ---
         boolean simulation_running = true; // ECALL can stop the simulation
+
         while (simulation_running) {
 
             reg[0] = 0; // Ensure x0 is always 0.
 
-            if ((pc >> 2) >= progr.length) {
+            if (pc >= programSizeInBytes) {
                 System.out.println("PC out of bounds. Halting.");
                 break;
             }
 
-            int instr = progr[pc >> 2];
+            int instr = readWord(pc);
             DecodedInstruction decoded = new DecodedInstruction(instr);
 
             // A flag to check if the PC was changed by a branch or jump.
