@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class main {
+public class ISAsim {
     
     static int pc;
     static int reg[] = new int[32];
