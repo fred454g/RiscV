@@ -6,50 +6,63 @@ public class ISAsim {
     
     static int pc;
     static int reg[] = new int[32];
+    static int[] expectedRegs = null; // Array to hold the expected results from the .res file
     static byte[] memory = new byte[1024 * 1024]; // 1 MB of simulated RAM
 
     // --- Program State ---
-    static int programSizeInBytes = 0; // The total size of the loaded program in bytes. Used for bounds checking.
+    static int programSizeInBytes = 0;
 
-    /**
-     * Main entry point for the simulator.
-     * Loads a binary program into memory and starts the simulation loop.
-     * @param args Command line arguments, expects the path to the .bin file at index 0.
-     */
     public static void main(String[] args) {
         
         // --- PROGRAM LOADING ---
-        Scanner scanner = new Scanner(System.in); // Create a new scanner to read from the console
+        Scanner scanner = new Scanner(System.in);
         System.out.println("Enter the path to the .bin file (e.g., tests/task1/addi.bin):");
-        String binFile = scanner.nextLine(); // Read the file path from the user
+        String binFile = scanner.nextLine();
+        
+        // --- NEW: Derive .res file path and load expected results ---
+        String resFile = "";
+        if (binFile.toLowerCase().endsWith(".bin")) {
+            resFile = binFile.substring(0, binFile.length() - 4) + ".res";
+        } else {
+            System.out.println("Warning: Input file does not end with .bin. Cannot find corresponding .res file.");
+        }
 
         try {
-            // Attempt to load the program from the .bin file using the ProgramLoader helper
+            // Load the main program binary
             programSizeInBytes = ProgramLoader.loadProgram(memory, binFile);
             System.out.println("Loaded " + programSizeInBytes + " bytes from " + binFile);
 
+            // If a .res file path was created, try to load it
+            if (!resFile.isEmpty()) {
+                System.out.println("Attempting to load expected results from: " + resFile);
+                expectedRegs = ResultsLoader.loadExpectedResults(resFile);
+                System.out.println("Successfully loaded expected results.");
+            }
+
         } catch (IOException e) {
-            // Handle errors (e.g., file not found, program too large)
             System.out.println("Error loading file: " + e.getMessage());
-            scanner.close(); // Close the scanner on error
+            scanner.close();
             return;
         }
 
-        scanner.close(); // Close the scanner after we're done with it
+        scanner.close();
 
         // --- SIMULATION START ---
-        System.out.println("Starting simulation!");
+        System.out.println("\nStarting simulation!");
 
-        pc = 0;                    // Set program Counter to the start of the program
-        Arrays.fill(reg, 0); // Initiate all registers to 0
-        reg[2] = memory.length; // Initialize Stack Pointer (x2) to the end of memory
+        pc = 0;
+        Arrays.fill(reg, 0);
+        //reg[2] = memory.length;
         
         // --- SIMULATION LOOP ---
-        boolean simulation_running = true; // ECALL can stop the simulation
-
+        boolean simulation_running = true;
         while (simulation_running) {
-
-            reg[0] = 0; // Ensure x0 is always 0.
+            // ... (Your entire simulation loop remains unchanged) ...
+            // ...
+            // ...
+            // ...
+            // --- End of your while loop ---
+            reg[0] = 0; 
 
             if (pc >= programSizeInBytes) {
                 System.out.println("PC out of bounds. Halting.");
@@ -59,7 +72,6 @@ public class ISAsim {
             int instr = readWord(pc);
             DecodedInstruction decoded = new DecodedInstruction(instr);
 
-            // A flag to check if the PC was changed by a branch or jump.
             boolean pc_changed = false;
 
             switch (decoded.type) {
@@ -189,16 +201,13 @@ public class ISAsim {
                             break;
 
                         case 0x73: // ECALL
-                            // Check the service number in register a7 (x17)
                             int service = reg[17]; // a7 is x17
                             switch (service) {
                                 case 1: // Service 1: Print Integer
-                                    // The integer to print is in register a0 (x10)
                                     System.out.print(reg[10]);
                                     break;
                                 
                                 case 4: // Service 4: Print String
-                                    // The address of the string is in a0 (x10)
                                     int addr = reg[10];
                                     StringBuilder sb = new StringBuilder();
                                     while (memory[addr] != 0) {
@@ -210,7 +219,7 @@ public class ISAsim {
 
                                 case 10: // Service 10: Exit
                                     System.out.println("\n--- ECALL: Exit ---");
-                                    simulation_running = false; // Set flag to terminate the loop
+                                    simulation_running = false; 
                                     pc_changed = true;
                                     break;
                                 
@@ -224,7 +233,7 @@ public class ISAsim {
                                     System.out.println("Unknown ECALL service number: " + service);
                                     break;
                             }
-                            break; // End of ECALL case    
+                            break; 
                     }
                     break;
 
@@ -286,8 +295,8 @@ public class ISAsim {
                     break;
 
                 case J: // JAL (Jump and Link)
-                    if (decoded.j.rd() != 0) { // Don't write link to x0
-                        reg[decoded.j.rd()] = pc + 4; // Store return address
+                    if (decoded.j.rd() != 0) { 
+                        reg[decoded.j.rd()] = pc + 4;
                     }
                     pc += decoded.j.signedOffset();
                     pc_changed = true;
@@ -298,7 +307,6 @@ public class ISAsim {
                     break;
             }
 
-            // Increment PC only if it wasn't a jump or a taken branch
             if (!pc_changed) {
                 pc += 4;
             }
@@ -308,7 +316,29 @@ public class ISAsim {
         System.out.println("Final Register State (non-zero):");
         for (int i = 0; i < reg.length; ++i) {
             if (reg[i] != 0) {
-                System.out.println("x" + i + ":\t" + reg[i]);
+                // Print in both decimal and hex for easier debugging
+                System.out.printf("x%d:\t%-12d (0x%08X)\n", i, reg[i], reg[i]);
+            }
+        }
+
+        // --- NEW: Compare final registers with expected results ---
+        if (expectedRegs != null) {
+            System.out.println("\n--- Comparing with expected results from .res file ---");
+            boolean allMatch = true;
+            for (int i = 0; i < 32; i++) {
+                // Compare the final register state with the expected state
+                if (reg[i] != expectedRegs[i]) {
+                    System.out.printf("MISMATCH in x%d: Expected=0x%08X (%d), Got=0x%08X (%d)\n",
+                                      i, expectedRegs[i], expectedRegs[i], reg[i], reg[i]);
+                    allMatch = false;
+                }
+            }
+
+            System.out.println(); // Add a newline for spacing
+            if (allMatch) {
+                System.out.println(">>> TEST PASSED: All register values match the expected results.");
+            } else {
+                System.out.println(">>> TEST FAILED: One or more registers did not match the expected results.");
             }
         }
     }
@@ -317,10 +347,7 @@ public class ISAsim {
     //================================
     // HELPER FUNCTIONS
     //================================
-
-    /**
-     * Writes a 32-bit integer to memory at a given address (Little Endian).
-     */
+    // ... (Your helper functions writeWord, readWord, etc. remain unchanged) ...
     private static void writeWord(int address, int value) {
         memory[address]     = (byte) (value & 0xFF);
         memory[address + 1] = (byte) ((value >> 8) & 0xFF);
@@ -328,24 +355,15 @@ public class ISAsim {
         memory[address + 3] = (byte) ((value >> 24) & 0xFF);
     }
 
-    /**
-     * Writes a 16-bit halfword to memory (Little Endian).
-     */
     private static void writeHalf(int address, int value) {
-        memory[address]     = (byte) (value & 0xFF);         // Lower byte
-        memory[address + 1] = (byte) ((value >> 8) & 0xFF);  // Upper byte
+        memory[address]     = (byte) (value & 0xFF);
+        memory[address + 1] = (byte) ((value >> 8) & 0xFF);
     }
 
-    /**
-     * Writes a single byte to memory.
-     */
     private static void writeByte(int address, int value) {
         memory[address] = (byte) (value & 0xFF);
     }
 
-    /**
-     * Reads a 32-bit integer from memory at a given address (Little Endian).
-     */
     private static int readWord(int address) {
         return (memory[address] & 0xFF) |
             ((memory[address + 1] & 0xFF) << 8) |
@@ -353,18 +371,12 @@ public class ISAsim {
             ((memory[address + 3] & 0xFF) << 24);
     }
 
-    /**
-     * Reads a signed 16-bit halfword from memory (Little Endian).
-     */
     private static short readHalf(int address) {
         int lo = memory[address] & 0xFF;
         int hi = memory[address + 1] & 0xFF;
         return (short) ((hi << 8) | lo);
     }
 
-    /**
-     * Reads a signed 8-bit byte from memory.
-     */
     private static byte readByte(int address) {
         return memory[address];
     }
