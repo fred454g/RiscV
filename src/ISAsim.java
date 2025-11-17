@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class ISAsim {
     
     static int pc;
-    static int reg[] = new int[32];
+    static int reg[] = new int[32]; // 32 registers in an array holding 32-bit integers.
     static int[] expectedRegs = null; // Array to hold the expected results from the .res file
     static byte[] memory = new byte[1024 * 1024]; // 1 MB of simulated RAM
 
@@ -14,12 +14,12 @@ public class ISAsim {
 
     public static void main(String[] args) {
         
-        // --- PROGRAM LOADING ---
+        // --- GETTING INPUT PROGRAM ---
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter the path to the .bin file (e.g., tests/task1/addi.bin):");
         String binFile = scanner.nextLine();
         
-        // --- NEW: Derive .res file path and load expected results ---
+        // --- DERIVING EXPECTED RESULTS (from .res) ---
         String resFile = "";
         if (binFile.toLowerCase().endsWith(".bin")) {
             resFile = binFile.substring(0, binFile.length() - 4) + ".res";
@@ -28,11 +28,11 @@ public class ISAsim {
         }
 
         try {
-            // Load the main program binary
+            // LOADING PROGRAM
             programSizeInBytes = ProgramLoader.loadProgram(memory, binFile);
             System.out.println("Loaded " + programSizeInBytes + " bytes from " + binFile);
 
-            // If a .res file path was created, try to load it
+            // LOADING RESULTS
             if (!resFile.isEmpty()) {
                 System.out.println("Attempting to load expected results from: " + resFile);
                 expectedRegs = ResultsLoader.loadExpectedResults(resFile);
@@ -50,8 +50,8 @@ public class ISAsim {
         // --- SIMULATION START ---
         System.out.println("\nStarting simulation!");
 
-        pc = 0;
-        Arrays.fill(reg, 0);
+        pc = 0; // Program counter at instruction start
+        Arrays.fill(reg, 0); // Make sure the registers are all 0
         //reg[2] = memory.length;
         
         // --- SIMULATION LOOP ---
@@ -316,7 +316,7 @@ public class ISAsim {
             }
         }
 
-        // --- NEW: Compare final registers with expected results ---
+        // --- Compare final registers with expected results ---
         if (expectedRegs != null) {
             System.out.println("\n--- Comparing with expected results from .res file ---");
             boolean allMatch = true;
@@ -330,6 +330,7 @@ public class ISAsim {
             }
 
             System.out.println(); // Add a newline for spacing
+            
             if (allMatch) {
                 System.out.println(">>> TEST PASSED: All register values match the expected results.");
             } else {
@@ -342,7 +343,6 @@ public class ISAsim {
     //================================
     // HELPER FUNCTIONS
     //================================
-    // ... (Your helper functions writeWord, readWord, etc. remain unchanged) ...
     private static void writeWord(int address, int value) {
         memory[address]     = (byte) (value & 0xFF);
         memory[address + 1] = (byte) ((value >> 8) & 0xFF);

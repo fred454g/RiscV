@@ -31,7 +31,6 @@ public class ResultsLoader {
         for (int i = 0; i < 32; i++) {
             int offset = i * 4;
             
-            // --- THIS IS THE FIX ---
             // Assemble the 4 bytes into an integer in LITTLE-ENDIAN order.
             // The byte order is reversed from the previous version to match the file format.
             // This logic now matches your ISAsim.readWord() method.
