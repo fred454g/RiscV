@@ -42,7 +42,7 @@ public class ISAsim {
         } catch (IOException e) {
             System.out.println("Error loading file: " + e.getMessage());
             scanner.close();
-            return;
+            //return; // Uncomment to disable running when .res doesn't exist
         }
 
         scanner.close();
@@ -330,7 +330,7 @@ public class ISAsim {
             }
 
             System.out.println(); // Add a newline for spacing
-            
+
             if (allMatch) {
                 System.out.println(">>> TEST PASSED: All register values match the expected results.");
             } else {
